@@ -1,4 +1,4 @@
-SEQR Opencart 2.0 Plugin
+SEQR Opencart 1.5.x Plugin
 ===================
 
 ### SEQR ###
