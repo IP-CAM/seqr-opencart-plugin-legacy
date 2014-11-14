@@ -15,7 +15,7 @@ Plugin provide possibility for shop clients to select SEQR as payment method, an
 
 * SEQR as payment method on checkout page. 
  
-![alt tag](https://raw.githubusercontent.com/SeamlessDistribution/seqr-magento-plugin/master/doc/Magento-Checkout.png)
+![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin-legacy/master/doc/Opencart-SEQR-Select.png)
 
 * Payment via scanning of QR code.
 
