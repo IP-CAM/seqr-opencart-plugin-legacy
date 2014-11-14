@@ -3,8 +3,9 @@ class ControllerPaymentSeqr extends Controller {
     private $error = array();
 
     public function index() {
-        $this->load->language('payment/seqr');
+        $this->language->load('payment/seqr');
         $this->document->setTitle($this->language->get('heading_title'));
+
         $this->load->model('setting/setting');
 
         // Verify request
@@ -16,25 +17,25 @@ class ControllerPaymentSeqr extends Controller {
             $this->response->redirect($target);
         }
 
-        $data['error'] = @ $this->error;
+        $this->data['error'] = @ $this->error;
 
         // Load messages
         $messages = array('heading_title', 'text_edit', 'text_enabled', 'text_disabled','text_yes', 'text_no',
             'seqr_soap_wsdl_url', 'seqr_terminal_id', 'seqr_terminal_password', 'entry_test', 'seqr_order_status_paid',
             'seqr_order_status_canceled', 'seqr_status', 'button_save', 'button_cancel');
-        foreach ($messages as $code) $data['msg_' . $code] = $this->language->get($code);
+        foreach ($messages as $code) $this->data['msg_' . $code] = $this->language->get($code);
 
         // Prepare navigation
-        $data['breadcrumbs'] = array(
+        $this->data['breadcrumbs'] = array(
             array(
                 'text'=> $this->language->get('text_home'),
                 'href' => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL'),
                 'separator' => false
             ),
 
-            array(
-                'text' => $this->language->get('text_payment'),
-                'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'),
+            $this->data['breadcrumbs'][] = array(
+                'text'      => $this->language->get('text_payment'),
+                'href'      => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'),
                 'separator' => ' :: '
             ),
 
@@ -45,23 +46,25 @@ class ControllerPaymentSeqr extends Controller {
             )
         );
 
-        $data['action'] = $this->url->link('payment/seqr', 'token=' . $this->session->data['token'], 'SSL');
-        $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
+        $this->data['action'] = $this->url->link('payment/seqr', 'token=' . $this->session->data['token'], 'SSL');
+        $this->data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
 
         // Load properties from request (or configuration)
         $properties = array('seqr_terminal_id', 'seqr_terminal_password', 'seqr_test', 'seqr_order_status_paid',
             'seqr_order_status_canceled', 'seqr_soap_wsdl_url', 'seqr_status');
-        foreach ($properties as $key) $data[$key] = $this->requestOrConfig($key);
+        foreach ($properties as $key) $this->data[$key] = $this->requestOrConfig($key);
 
         $this->load->model('localisation/order_status');
-        $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
+        $this->data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
 
         // Prepare output
-        $data['header'] = $this->load->controller('common/header');
-        $data['column_left'] = $this->load->controller('common/column_left');
-        $data['footer'] = $this->load->controller('common/footer');
+        $this->template = 'payment/seqr.tpl';
+        $this->children = array(
+            'common/header',
+            'common/footer'
+        );
 
-        $this->response->setOutput($this->load->view('payment/seqr.tpl', $data));
+        $this->response->setOutput($this->render());
     }
 
     protected function validate() {
@@ -73,8 +76,9 @@ class ControllerPaymentSeqr extends Controller {
 
         if (! array_key_exists('seqr_soap_wsdl_url', $this->error)) {
             try {
-                @ new SoapClient($this->getPostData()['seqr_soap_wsdl_url']);
+                @new SoapClient($this->getPostData()['seqr_soap_wsdl_url']);
             } catch (Exception $e) {
+                ob_clean();
                 $this->error['seqr_soap_wsdl_url'] = $this->language->get('error_seqr_wsdl_unavailable');
             }
         }
