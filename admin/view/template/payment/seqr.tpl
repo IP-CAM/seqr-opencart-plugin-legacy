@@ -22,6 +22,20 @@
                 <table class="form">
                     <tr>
                         <td>
+                            <span class="required">*</span> <?php echo $msg_seqr_user_id; ?>
+                        </td>
+
+                        <td>
+                            <input type="text" name="seqr_user_id" value="<?php echo $seqr_user_id; ?>" />
+
+                            <?php if (isset($error['seqr_user_id']))  { ?>
+                                <span class="error"><?php echo $error['seqr_user_id']; ?></span>
+                            <?php } ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
                             <span class="required">*</span> <?php echo $msg_seqr_terminal_id; ?>
                         </td>
 

@@ -20,7 +20,7 @@ class ControllerPaymentSeqr extends Controller {
         $this->data['error'] = @ $this->error;
 
         // Load messages
-        $messages = array('heading_title', 'text_edit', 'text_enabled', 'text_disabled','text_yes', 'text_no',
+        $messages = array('heading_title', 'text_edit', 'seqr_user_id', 'text_enabled', 'text_disabled','text_yes', 'text_no',
             'seqr_soap_wsdl_url', 'seqr_terminal_id', 'seqr_terminal_password', 'entry_test', 'seqr_order_status_paid',
             'seqr_order_status_canceled', 'seqr_status', 'button_save', 'button_cancel');
         foreach ($messages as $code) $this->data['msg_' . $code] = $this->language->get($code);
@@ -51,7 +51,7 @@ class ControllerPaymentSeqr extends Controller {
 
         // Load properties from request (or configuration)
         $properties = array('seqr_terminal_id', 'seqr_terminal_password', 'seqr_test', 'seqr_order_status_paid',
-            'seqr_order_status_canceled', 'seqr_soap_wsdl_url', 'seqr_status');
+            'seqr_order_status_canceled', 'seqr_soap_wsdl_url', 'seqr_status', 'seqr_user_id');
         foreach ($properties as $key) $this->data[$key] = $this->requestOrConfig($key);
 
         $this->load->model('localisation/order_status');
@@ -71,7 +71,7 @@ class ControllerPaymentSeqr extends Controller {
         if (! $this->user->hasPermission('modify', 'payment/seqr'))
             $this->error['warning'] = $this->language->get('error_permission');
 
-        $required = array('seqr_terminal_id', 'seqr_terminal_password', 'seqr_soap_wsdl_url');
+        $required = array('seqr_user_id', 'seqr_terminal_id', 'seqr_terminal_password', 'seqr_soap_wsdl_url');
         foreach ($required as $field) $this->required($field);
 
         if (! array_key_exists('seqr_soap_wsdl_url', $this->error)) {

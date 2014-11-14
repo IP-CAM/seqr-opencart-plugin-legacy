@@ -1,4 +1,5 @@
 <?php
+$seqr = "";
 if (isset ($qr_code) && isset($url_poll)) {
     $seqr = "/seqr/js/seqrShop.js#!mode=demo&injectCSS=false&statusCallback=statusUpdated&invoiceQRCode={$qr_code}&statusURL={$url_poll}";
 }
@@ -8,22 +9,27 @@ if (isset ($qr_code) && isset($url_poll)) {
 
 <div class="content" id="payment">
     <link rel="stylesheet" href="https://cdn.seqr.com/webshop-plugin/css/seqrShop.css">
-    <script>
+
+    <script type="text/javascript">
         //<!--
-        var script = document.createElement('script');
+        var url = '<?= $seqr; ?>';
 
-        script.id = 'seqrShop';
-        script.setAttribute('src','<?= $seqr; ?>');
+        if (url) {
+            var script = document.createElement('script');
 
-        document.getElementById('seqr_panel').innerHTML = '';
-        document.getElementById('seqr_panel').appendChild(script);
+            script.id = 'seqrShop';
+            script.setAttribute('src', url);
 
-        if (__seqr_intervalID) window.clearInterval(__seqr_intervalID);
+            document.getElementById('seqr_panel').innerHTML = '';
+            document.getElementById('seqr_panel').appendChild(script);
 
-        var statusUpdated = function(status) {
-            if (status.status === 'PAID')
-                window.location.href = 'index.php?route=checkout/success';
-        };
+            if (window.__seqr_intervalID) window.clearInterval(window.__seqr_intervalID);
+
+            var statusUpdated = function(status) {
+                if (status.status === 'PAID')
+                    window.location.href = 'index.php?route=checkout/success';
+            };
+        }
         //-->
     </script>
 
