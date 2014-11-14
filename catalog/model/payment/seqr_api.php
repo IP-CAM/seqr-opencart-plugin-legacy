@@ -2,7 +2,6 @@
 
 class ModelPaymentSeqrApi extends Model {
     public function sendInvoice() {
-
         try {
             $SOAP = $this->SOAP();
             $arr = array(
@@ -21,7 +20,6 @@ class ModelPaymentSeqrApi extends Model {
     }
 
     public function getPaymentStatus($ref, $version) {
-
         try {
             $SOAP = $this->SOAP();
             $result = $SOAP->getPaymentStatus(array(
@@ -39,14 +37,12 @@ class ModelPaymentSeqrApi extends Model {
         }
     }
 
-    public function cancelInvoice() {
-        $ref = $this->session->data['seqr']->invoiceReference;
-
+    public function cancelInvoice($reference) {
         try {
             $SOAP = $this->SOAP();
             $result = $SOAP->cancelInvoice(array(
                 "context" => $this->getRequestContext(),
-                "invoiceReference" => $ref
+                "invoiceReference" => $reference
             ))->return;
 
             if ($result->resultCode != 0) throw new Exception($result->resultCode . ' : ' . $result->resultDescription);
@@ -59,12 +55,10 @@ class ModelPaymentSeqrApi extends Model {
     }
 
     private function SOAP() {
-
         return new SoapClient($this->config->get('seqr_soap_wsdl_url'), array( 'trace' => 1, 'connection_timeout' => 3000 ));
     }
 
     private function getRequestContext() {
-
         return array(
             'initiatorPrincipalId' => array(
                 'id' => $this->config->get('seqr_terminal_id'),
@@ -83,11 +77,11 @@ class ModelPaymentSeqrApi extends Model {
         $total = 0;
         $taxes = $this->cart->getTaxes();
 
-        $this->load->model('extension/extension');
+        $this->load->model('setting/extension');
 
         $sort_order = array();
 
-        $results = $this->model_extension_extension->getExtensions('total');
+        $results = $this->model_setting_extension->getExtensions('total');
         foreach ($results as $key => $value) $sort_order[$key] = $this->config->get($value['code'] . '_sort_order');
 
         array_multisort($sort_order, SORT_ASC, $results);
@@ -103,7 +97,7 @@ class ModelPaymentSeqrApi extends Model {
             'acknowledgmentMode' => 'NO_ACKNOWLEDGMENT',
 
             'issueDate' => date('Y-m-d\Th:i:s'),
-            'title' => $this->config->get('config_meta_title'),
+            'title' => $this->config->get('config_title'),
             'clientInvoiceId' => $order['order_id'],
 
             'invoiceRows' => array(),

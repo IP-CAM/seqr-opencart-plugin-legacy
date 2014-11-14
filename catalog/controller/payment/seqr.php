@@ -3,12 +3,19 @@
 class ControllerPaymentSeqr extends Controller {
 
     const STATUS_CANCELED = '{ "resultCode":0, "resultDescription":"SUCCESS", "status":"CANCELED", "version":0 }';
+    private $dbTable = "seqr";
+
+    function __construct($registry) {
+        parent::__construct($registry);
+        $this->dbTable = DB_PREFIX . $this->dbTable;
+    }
 
     public function index() {
+        $this->install();
         $this->load->language('payment/seqr');
 
-        $data['text_unavailable'] = $this->language->get('text_unavailable');
-        $data['msg_title'] = $this->language->get('text_title');
+        $this->data['text_unavailable'] = $this->language->get('text_unavailable');
+        $this->data['msg_title'] = $this->language->get('text_title');
 
         if (isset($this->request->server['HTTPS'])
             && (($this->request->server['HTTPS'] == 'on')
@@ -19,36 +26,42 @@ class ControllerPaymentSeqr extends Controller {
             $baseUrl = $this->config->get('config_url');
         }
 
-        $data['url_poll'] = $baseUrl . 'index.php?route=payment/seqr/poll';
+        $this->data['url_poll'] = urlencode($baseUrl . 'index.php?route=payment/seqr/poll');
 
         $this->load->model('checkout/order');
         $this->load->model('payment/seqr_api');
 
-        if (array_key_exists('seqr', $this->session->data)
-            && $this->session->data['seqr']->status == 'CANCELED') {
+        $seqr = $this->read($this->session->data['order_id']);
 
-            $this->model_payment_seqr_api->cancelInvoice();
+        if ($seqr && $seqr->status == 'CANCELED') {
+            $this->model_payment_seqr_api->cancelInvoice($seqr->invoiceReference);
+            $seqr = null;
         }
 
-        $result = $this->model_payment_seqr_api->sendInvoice();
+        if (! $seqr) {
+            $result = $this->model_payment_seqr_api->sendInvoice();
 
-        if ($result) {
-            $result->version = 0;
-            $result->status = 'ISSUED';
+            if ($result) {
+                $result->version = 0;
+                $result->status = 'ISSUED';
+            }
 
-            @$order = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-            $order['payment_custom_field'] = json_encode($result);
-            @$this->model_checkout_order->editOrder($this->session->data['order_id'], $order);
+            $seqr = $result;
 
-            $data['qr_code'] = $result->invoiceQRCode;
-            $data['reference'] = $result->invoiceReference;
+            $this->save($this->session->data['order_id'], $result);
+        }
+
+        if ($seqr) {
+            $this->data['qr_code'] = urlencode($seqr->invoiceQRCode);
+            $this->data['reference'] = urlencode($seqr->invoiceReference);
         }
 
         if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/seqr.tpl')) {
-            return $this->load->view($this->config->get('config_template') . '/template/payment/seqr.tpl', $data);
+            $this->template = $this->config->get('config_template') . '/template/payment/seqr.tpl';
         }
 
-        return $this->load->view('default/template/payment/seqr.tpl', $data);
+        $this->template = 'default/template/payment/seqr.tpl';
+        $this->render();
     }
 
     public function poll() {
@@ -57,8 +70,7 @@ class ControllerPaymentSeqr extends Controller {
         $this->load->model('payment/seqr_api');
         $this->load->model('checkout/order');
 
-        $order = $this->model_checkout_order->getOrder($this->session->data['order_id']);
-        $seqr = json_decode($order['payment_custom_field']);
+        $seqr = $this->read($this->session->data['order_id']);
 
         if (! $seqr) {
             ob_clean();
@@ -68,7 +80,7 @@ class ControllerPaymentSeqr extends Controller {
 
         if (array_key_exists('status', $seqr) && in_array($seqr->status, array('CANCELED', 'PAID'))) {
             ob_clean();
-            echo $order['payment_custom_field'];
+            echo @json_encode($seqr);
             exit;
         }
 
@@ -77,12 +89,11 @@ class ControllerPaymentSeqr extends Controller {
         $seqr->version = $result->version;
         $seqr->status = $result->status;
 
-        $order['payment_custom_field'] = json_encode($seqr);
-        $this->model_checkout_order->editOrder($this->session->data['order_id'], $order);
+        $this->save($this->session->data['order_id'], $seqr);
         $this->updateOrder($this->session->data['order_id'], $seqr);
 
         ob_clean();
-        echo json_encode($this->session->data['seqr']);
+        echo @json_encode($seqr);
         exit;
     }
 
@@ -92,10 +103,7 @@ class ControllerPaymentSeqr extends Controller {
         $this->load->model('payment/seqr_api');
         $this->load->model('checkout/order');
 
-        $order = $this->model_checkout_order->getOrder($_GET['order_id']);
-        if (! $order) $this->notFound();
-
-        $seqr = json_decode($order['payment_custom_field']);
+        $seqr = $this->read($_GET['order_id']);
         if (array_key_exists('status', $seqr) && in_array($seqr->status, array('CANCELED', 'PAID'))) {
             ob_clean();
             exit;
@@ -106,8 +114,7 @@ class ControllerPaymentSeqr extends Controller {
         $seqr->version = $result->version;
         $seqr->status = $result->status;
 
-        $order['payment_custom_field'] = json_encode($seqr);
-        $this->model_checkout_order->editOrder($this->session->data['order_id'], $order);
+        $this->save($this->session->data['order_id'], $seqr);
         $this->updateOrder($this->session->data['order_id'], $seqr);
 
         ob_clean();
@@ -122,14 +129,13 @@ class ControllerPaymentSeqr extends Controller {
         $order = $this->model_checkout_order->getOrder($_GET['order_id']);
         if (! $order) $this->notFound();
 
-        $seqr = json_decode($order['payment_custom_field']);
+        $seqr = $this->read($_GET['order_id']);
         $result = $this->model_payment_seqr_api->getPaymentStatus($seqr->invoiceReference, $seqr->version);
 
         $seqr->version = $result->version;
         $seqr->status = $result->status;
 
-        $order['payment_custom_field'] = json_encode($seqr);
-        $this->model_checkout_order->editOrder($this->session->data['order_id'], $order);
+        $this->save($this->session->data['order_id'], $seqr);
         $this->updateOrder($this->session->data['order_id'], $seqr);
 
         if (! in_array($seqr->status, array('CANCELED', 'PAID'))) $this->notFound();
@@ -139,19 +145,51 @@ class ControllerPaymentSeqr extends Controller {
         header("Location: {$order['store_url']}/index.php?route={$target}");
     }
 
-    public function updateOrder($orderId, $seqr) {
+    public function updateOrder($order_id, $seqr) {
         if (! in_array($seqr->status, array('CANCELED', 'PAID'))) return;
 
         $status = $seqr->status == 'PAID'
             ? $this->config->get('seqr_order_status_paid')
             : $this->config->get('seqr_order_status_canceled');
 
-        $this->model_checkout_order->addOrderHistory($orderId, $status);
+        $this->model_checkout_order->confirm($order_id, $status);
     }
 
     public function notFound() {
         ob_clean();
         header("HTTP/1.0 404 Not Found");
         exit;
+    }
+
+    private function save($order_id, $data) {
+        if (! $order_id || ! $data) return;
+
+        $check_result = $this->db->query("SELECT order_id FROM {$this->dbTable} WHERE order_id = '{$this->db->escape($order_id)}'");
+        $data_json = json_encode($data);
+
+        if (! $check_result->num_rows) {
+            $this->db->query("INSERT INTO {$this->dbTable} SET order_id = {$this->db->escape($order_id)}, json_data = '{$this->db->escape($data_json)}'");
+            return;
+        }
+
+        $this->db->query("UPDATE {$this->dbTable} SET json_data = '{$this->db->escape($data_json)}' WHERE order_id = {$this->db->escape($order_id)}");
+    }
+
+    private function read($order_id) {
+        if (! $order_id) return null;
+
+        $query = $this->db->query("SELECT json_data FROM {$this->dbTable} WHERE order_id = '{$this->db->escape($order_id)}'");
+
+        if (! $query->num_rows) return null;
+        return json_decode($query->row['json_data']);
+    }
+
+    private function install() {
+        $this->db->query("CREATE TABLE IF NOT EXISTS {$this->dbTable} (
+            order_id int(11) NOT NULL,
+            json_data VARCHAR(225) NOT NULL,
+
+            PRIMARY KEY (order_id)
+        )");
     }
 }
