@@ -26,7 +26,7 @@ Plugin provide possibility for shop clients to select SEQR as payment method, an
 ![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin-legacy/master/doc/Opencart-SEQR-Button.png)
  
 ### Installation & Configuration ###
-![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin/doc/doc/Opencart-SEQR-Settings.png)
+![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin-legacy/master/doc/Opencart-SEQR-Settings.png)
 
 Plugin can be installed by copping all plugin files to the opencart directory.
 
