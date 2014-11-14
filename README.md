@@ -23,7 +23,7 @@ Plugin provide possibility for shop clients to select SEQR as payment method, an
 
 * Payment from 
 
-![alt tag](https://raw.githubusercontent.com/SeamlessDistribution/seqr-magento-plugin/master/doc/Magento-Payment-Mobile.png)
+![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin-legacy/master/doc/Opencart-SEQR-Button.png)
  
 ### Installation & Configuration ###
 ![alt tag](https://raw.githubusercontent.com/aiskov/seqr-opencart-plugin/doc/doc/Opencart-SEQR-Settings.png)
