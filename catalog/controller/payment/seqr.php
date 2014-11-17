@@ -52,6 +52,7 @@ class ControllerPaymentSeqr extends Controller {
         }
 
         if ($seqr) {
+            $this->data['test'] = $this->config->get('seqr_test');
             $this->data['qr_code'] = urlencode($seqr->invoiceQRCode);
             $this->data['reference'] = urlencode($seqr->invoiceReference);
         }
