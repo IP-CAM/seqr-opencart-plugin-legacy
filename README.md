@@ -41,7 +41,8 @@ Title is shown as option of payment method in checkout process.
 All properties are required and should be configured before enabling this payment method in production.
 
 ### Tested with ###
-* Opencart 1.5.6.4	[April 23, 2014]
+* Opencart 1.5.6.4	[April  23, 2014]
+* Opencart 1.5.4   [August 16, 2012]
 
 ### Development & File structure ###
 
