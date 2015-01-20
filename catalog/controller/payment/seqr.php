@@ -44,11 +44,10 @@ class ControllerPaymentSeqr extends Controller {
             if ($result) {
                 $result->version = 0;
                 $result->status = 'ISSUED';
+
+                $seqr = $result;
+                $this->save($this->session->data['order_id'], $result);
             }
-
-            $seqr = $result;
-
-            $this->save($this->session->data['order_id'], $result);
         }
 
         if ($seqr) {

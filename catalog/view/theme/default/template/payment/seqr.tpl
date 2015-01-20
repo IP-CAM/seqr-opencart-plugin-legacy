@@ -1,7 +1,7 @@
 <?php
 $seqr = "";
 if (isset ($qr_code) && isset($url_poll)) {
-    $seqr = "/seqr/js/seqrShop.js#!".($test ? 'mode=demo&' : '')."injectCSS=false&statusCallback=statusUpdated&invoiceQRCode={$qr_code}&statusURL={$url_poll}";
+    $seqr = "https://cdn.seqr.com/webshop-plugin/js/seqrShop.js#!".($test ? 'mode=demo&' : '')."injectCSS=false&statusCallback=statusUpdated&invoiceQRCode={$qr_code}&statusURL={$url_poll}";
 }
 ?>
 
