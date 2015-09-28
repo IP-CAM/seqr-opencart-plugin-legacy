@@ -76,7 +76,10 @@ class ControllerPaymentSeqr extends Controller {
 
         if (! array_key_exists('seqr_soap_wsdl_url', $this->error)) {
             try {
-                @new SoapClient($this->getPostData()['seqr_soap_wsdl_url']);
+                $data = $this->getPostData();
+                if ($data) {
+                    @new SoapClient($data['seqr_soap_wsdl_url']);
+                }
             } catch (Exception $e) {
                 ob_clean();
                 $this->error['seqr_soap_wsdl_url'] = $this->language->get('error_seqr_wsdl_unavailable');
@@ -87,11 +90,13 @@ class ControllerPaymentSeqr extends Controller {
     }
 
     private function requestOrConfig($key) {
-        return array_key_exists($key, $this->getPostData()) ? $this->getPostData()[$key] : $this->config->get($key);
+        $data = $this->getPostData();
+        return array_key_exists($key, $data) ? $data[$key] : $this->config->get($key);
     }
 
     private function required($key) {
-        if (! array_key_exists($key, $this->getPostData()) || ! $this->getPostData()[$key])
+        $data = $this->getPostData();
+        if (! array_key_exists($key, $data) || ! $data[$key])
             $this->error[$key] = $this->language->get('error_' . $key);
     }
 
